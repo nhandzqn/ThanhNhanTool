@@ -1,4 +1,4 @@
-﻿# menu.ps1
+# menu.ps1
 
 # ===== Banner =====
 $banner = @'
@@ -12,24 +12,24 @@ $$$$$$$$\ $$\                           $$\             $$\   $$\ $$\
    \__|   \__|  \__| \_______|\__|  \__|\__|  \__|      \__|  \__|\__|  \__| \_______|\__|  \__|
 '@
 
-# ===== Hàm phụ trợ =====
-function Dung-Lai {
-    Write-Host "Nhấn Enter để tiếp tục..."
+# ===== Helper function =====
+function Pause-Script {
+    Write-Host "Press Enter to continue..."
     while ($true) {
         $key = [System.Console]::ReadKey($true)
         if ($key.Key -eq "Enter") { break }
     }
 }
 
-# ===== Hàm xóa Roblox =====
-function Tat-Roblox {
-    Write-Host "Đang đóng tiến trình Roblox..." -ForegroundColor Yellow
+# ===== Roblox termination =====
+function Kill-Roblox {
+    Write-Host "Closing Roblox processes..." -ForegroundColor Yellow
     $names = "RobloxPlayerBeta.exe","RobloxStudioBeta.exe","RobloxCrashHandler.exe"
     foreach ($n in $names) { taskkill /F /T /IM $n > $null 2>&1 }
 }
 
-function Xoa-Roblox {
-    Tat-Roblox
+function Remove-Roblox {
+    Kill-Roblox
     $paths = @(
         "$env:LOCALAPPDATA\Roblox",
         "$env:LOCALAPPDATA\Temp\Roblox",
@@ -48,41 +48,41 @@ function Xoa-Roblox {
             }
     }
 
-    $daXoa = 0
+    $deleted = 0
     foreach ($p in $paths) {
         if (Test-Path $p) {
-            Write-Host "Đang xóa $p" -ForegroundColor Cyan
-            try { Remove-Item -Path $p -Recurse -Force -ErrorAction Stop; $daXoa++ }
-            catch { Write-Warning "Không thể xóa $p" }
+            Write-Host "Deleting $p" -ForegroundColor Cyan
+            try { Remove-Item -Path $p -Recurse -Force -ErrorAction Stop; $deleted++ }
+            catch { Write-Warning "Unable to delete $p" }
         }
     }
 
-    if ($daXoa -gt 0) { Write-Host "Đã dọn dẹp xong Roblox ($daXoa thư mục)" -ForegroundColor Green }
-    else { Write-Host "Không tìm thấy dữ liệu Roblox để xóa" -ForegroundColor Yellow }
-    Dung-Lai
+    if ($deleted -gt 0) { Write-Host "Roblox cleanup completed ($deleted folders)" -ForegroundColor Green }
+    else { Write-Host "No Roblox data found to delete" -ForegroundColor Yellow }
+    Pause-Script
 }
 
 # ===== Menu =====
-function Hien-Menu {
+function Show-Menu {
     Clear-Host
     Write-Host $banner -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "===== MENU CHỨC NĂNG ====="
-    Write-Host "[1] Delete Data Roblox"
-    Write-Host "[0] Thoát"
-    Write-Host "======================"
+    Write-Host "===== FUNCTION MENU ====="
+    Write-Host "[1] Delete Roblox Data"
+    Write-Host "[0] Exit"
+    Write-Host "========================="
     Write-Host ""
 }
 
-# ===== Vòng lặp =====
+# ===== Loop =====
 :MENU while ($true) {
-    Hien-Menu
-    $chon = (Read-Host "Nhập lựa chọn").Trim().ToLower()
-    switch ($chon) {
-        '1'   { Xoa-Roblox; continue }
+    Show-Menu
+    $choice = (Read-Host "Enter your choice").Trim().ToLower()
+    switch ($choice) {
+        '1'   { Remove-Roblox; continue }
         '0'   { break MENU }
         'q'   { break MENU }
         'exit'{ break MENU }
-        default { Write-Warning "Lựa chọn không hợp lệ"; Dung-Lai }
+        default { Write-Warning "Invalid choice"; Pause-Script }
     }
 }
