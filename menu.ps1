@@ -67,7 +67,7 @@ function Show-Menu {
     Clear-Host
     Write-Host $banner -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "===== FUNCTION MENU ====="
+    Write-Host "===== MENU TOOL ====="
     Write-Host "[1] Delete Roblox Data"
     Write-Host "[0] Exit"
     Write-Host "========================="
@@ -86,3 +86,4 @@ function Show-Menu {
         default { Write-Warning "Invalid choice"; Pause-Script }
     }
 }
+
