@@ -1,4 +1,10 @@
-# menu.ps1
+# ===== Safety & TLS =====
+if ($PSVersionTable.PSVersion.Major -lt 5) {
+    Write-Host "PowerShell quá cũ ($($PSVersionTable.PSVersion)). Cần 5.1+." -ForegroundColor Red
+    Pause
+    exit 1
+}
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # ===== Banner =====
 $banner = @'
@@ -12,20 +18,16 @@ $$$$$$$$\ $$\                           $$\             $$\   $$\ $$\
    \__|   \__|  \__| \_______|\__|  \__|\__|  \__|      \__|  \__|\__|  \__| \_______|\__|  \__|
 '@
 
-# ===== Helper function =====
 function Pause-Script {
     Write-Host "Press Enter to continue..."
-    while ($true) {
-        $key = [System.Console]::ReadKey($true)
-        if ($key.Key -eq "Enter") { break }
-    }
+    while ($true) { $k=[Console]::ReadKey($true); if ($k.Key -eq "Enter"){ break } }
 }
 
-# ===== Roblox termination =====
 function Kill-Roblox {
     Write-Host "Closing Roblox processes..." -ForegroundColor Yellow
-    $names = "RobloxPlayerBeta.exe","RobloxStudioBeta.exe","RobloxCrashHandler.exe"
-    foreach ($n in $names) { taskkill /F /T /IM $n > $null 2>&1 }
+    "RobloxPlayerBeta.exe","RobloxStudioBeta.exe","RobloxCrashHandler.exe" | ForEach-Object {
+        taskkill /F /T /IM $_ > $null 2>&1
+    }
 }
 
 function Remove-Roblox {
@@ -36,7 +38,6 @@ function Remove-Roblox {
         "$env:ProgramFiles\Roblox",
         "$env:ProgramFiles(x86)\Roblox"
     )
-
     $pkgRoot = "$env:LOCALAPPDATA\Packages"
     if (Test-Path $pkgRoot) {
         Get-ChildItem $pkgRoot -Directory |
@@ -47,7 +48,6 @@ function Remove-Roblox {
                 $paths += "$($_.FullName)\TempState"
             }
     }
-
     $deleted = 0
     foreach ($p in $paths) {
         if (Test-Path $p) {
@@ -56,13 +56,11 @@ function Remove-Roblox {
             catch { Write-Warning "Unable to delete $p" }
         }
     }
-
     if ($deleted -gt 0) { Write-Host "Roblox cleanup completed ($deleted folders)" -ForegroundColor Green }
     else { Write-Host "No Roblox data found to delete" -ForegroundColor Yellow }
     Pause-Script
 }
 
-# ===== Menu =====
 function Show-Menu {
     Clear-Host
     Write-Host $banner -ForegroundColor Cyan
@@ -70,21 +68,18 @@ function Show-Menu {
     Write-Host "===== MENU TOOLS ====="
     Write-Host "[1] Delete Roblox Data"
     Write-Host "[0] Exit"
-    Write-Host "========================="
+    Write-Host "======================"
     Write-Host ""
 }
 
-# ===== Loop =====
 :MENU while ($true) {
     Show-Menu
     $choice = (Read-Host "Enter your choice").Trim().ToLower()
     switch ($choice) {
-        '1'   { Remove-Roblox; continue }
-        '0'   { break MENU }
-        'q'   { break MENU }
-        'exit'{ break MENU }
+        '1'    { Remove-Roblox; continue }
+        '0'    { exit }           # 0 + Enter = thoát hẳn PowerShell
+        'q'    { break MENU }
+        'exit' { break MENU }
         default { Write-Warning "Invalid choice"; Pause-Script }
     }
 }
-
-
