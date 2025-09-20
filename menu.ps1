@@ -57,13 +57,15 @@ function Remove-Roblox {
             catch { Write-Warning "Unable to delete $p" }
         }
     }
-    if ($deleted -gt 0) { Write-Host "Roblox cleanup completed ($deleted folders)" -ForegroundColor Green }
-    else { Write-Host "No Roblox data found to delete" -ForegroundColor Yellow }
+    if ($deleted -gt 0) {
+        Write-Host "Roblox cleanup completed ($deleted folders)" -ForegroundColor Green
+    } else {
+        Write-Host "No Roblox data found to delete" -ForegroundColor Yellow
+    }
     Pause-Script
 }
 
 # ===== MAC Change Tool (option 2) =====
-
 # Elevate if not admin (for adapter changes)
 $scriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
 $me = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -141,7 +143,7 @@ function Run-MacTool {
         Show-Adapters
         $choice = Read-Host "Enter adapter ID (r=refresh, b=back)"
         if ($choice -eq 'r') { continue }
-        if ($choice -eq 'b') { return }     # <-- nút quay lại
+        if ($choice -eq 'b') { return }
         if ($choice -notmatch '^\d+$') { Write-Host "Invalid input."; Start-Sleep 1.2; continue }
         if (-not $adapters -or $adapters.Count -eq 0) { Start-Sleep 1; continue }
 
@@ -158,7 +160,6 @@ function Run-MacTool {
         $after = Get-NetAdapter -Name $adapter.Name -ErrorAction SilentlyContinue
         $seen  = if ($after) { $after.MacAddress } else { "(N/A)" }
 
-        # thành công: màu xanh lá
         Write-Host ("Successfully changed MAC for {0} → {1}. Press Enter to continue selecting an adapter..." -f $adapter.Name, $seen) -ForegroundColor Green
         while ($true) { $k=[Console]::ReadKey($true); if ($k.Key -eq "Enter"){ break } }
     }
