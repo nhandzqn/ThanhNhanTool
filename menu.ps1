@@ -67,7 +67,6 @@ function Show-Menu {
     Write-Host ""
     Write-Host "===== MENU TOOLS ====="
     Write-Host "[1] Delete Roblox Data"
-    Write-Host "[Q] Quit"
     Write-Host "======================"
     Write-Host ""
 }
@@ -77,8 +76,6 @@ function Show-Menu {
     $choice = (Read-Host "Enter your choice").Trim().ToLower()
     switch ($choice) {
         '1'    { Remove-Roblox; continue }
-        'q'    { break MENU }
-        'exit' { break MENU }
         default { Write-Warning "Invalid choice"; Pause-Script }
     }
 }
