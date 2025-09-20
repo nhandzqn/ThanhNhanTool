@@ -141,7 +141,7 @@ function Bounce-Adapter($adapterName, $statusText) {
 function Run-MacTool {
     while ($true) {
         Show-Adapters
-        $choice = Read-Host "Enter adapter ID (r=refresh, t=back)"
+        $choice = Read-Host "Enter adapter ID"
         if ($choice -eq 'r') { continue }
         if ($choice -eq 't') { return }
         if ($choice -notmatch '^\d+$') { Write-Host "Invalid input."; Start-Sleep 1.2; continue }
@@ -186,3 +186,4 @@ function Show-Menu {
         default { Write-Warning "Invalid choice"; Pause-Script }
     }
 }
+
