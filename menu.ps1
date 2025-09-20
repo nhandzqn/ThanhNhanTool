@@ -84,7 +84,7 @@ function Show-Adapters {
         $global:adapters = @()
     }
     Clear-Host
-    Write-Host "[r] Scan Network`n"
+    Write-Host "[r] Refresh   [b] Back to Menu`n"
     if (-not $adapters -or $adapters.Count -eq 0) {
         Write-Host "(No network adapters found)"
         return
@@ -139,8 +139,9 @@ function Bounce-Adapter($adapterName, $statusText) {
 function Run-MacTool {
     while ($true) {
         Show-Adapters
-        $choice = Read-Host "Enter adapter ID to change (or 'r' to refresh)"
+        $choice = Read-Host "Enter adapter ID (r=refresh, b=back)"
         if ($choice -eq 'r') { continue }
+        if ($choice -eq 'b') { return }     # <-- nút quay lại
         if ($choice -notmatch '^\d+$') { Write-Host "Invalid input."; Start-Sleep 1.2; continue }
         if (-not $adapters -or $adapters.Count -eq 0) { Start-Sleep 1; continue }
 
@@ -157,8 +158,8 @@ function Run-MacTool {
         $after = Get-NetAdapter -Name $adapter.Name -ErrorAction SilentlyContinue
         $seen  = if ($after) { $after.MacAddress } else { "(N/A)" }
 
-        # One-line success + prompt in English
-        Write-Host ("Successfully changed MAC for {0} → {1}. Press Enter to continue selecting an adapter..." -f $adapter.Name, $seen)
+        # thành công: màu xanh lá
+        Write-Host ("Successfully changed MAC for {0} → {1}. Press Enter to continue selecting an adapter..." -f $adapter.Name, $seen) -ForegroundColor Green
         while ($true) { $k=[Console]::ReadKey($true); if ($k.Key -eq "Enter"){ break } }
     }
 }
@@ -170,7 +171,7 @@ function Show-Menu {
     Write-Host ""
     Write-Host "===== MENU TOOLS ====="
     Write-Host "[1] Delete Roblox Data"
-    Write-Host "[2] Change MAC Address (r = refresh, IDs start at 0)"
+    Write-Host "[2] Change MAC Address (IDs start at 0)"
     Write-Host "======================"
     Write-Host ""
 }
