@@ -1,40 +1,49 @@
-# === cấu hình ===
-# Đổi URL raw GitHub của bạn vào đây:
-$Url = "https://raw.githubusercontent.com/nhandzqn/ThanhNhanTool/refs/heads/main/Tools/1.cmd"
-# ví dụ: https://raw.githubusercontent.com/nhandzqn/ThanhNhanTool/main/tools/tool.cmd
+<#
+fetch-run.ps1
+Tải .cmd từ GitHub → chạy bằng CMD (admin) → xóa file tạm
+#>
 
-# (tuỳ chọn) đặt hash SHA-256 để kiểm toàn vẹn, để trống nếu không dùng
-$Sha256Expected = ""
+# ========== CONFIG ==========
+# Thay link raw GitHub của bạn vào đây:
+$Url = "https://raw.githubusercontent.com/nhandzqn/ThanhNhanTool/main/Tools/1.cmd"
 
-# === logic ===
-$ErrorActionPreference = 'Stop'
+# ========== AUTO ELEVATE ==========
+function Test-Admin {
+  $wi = [Security.Principal.WindowsIdentity]::GetCurrent()
+  $pr = New-Object Security.Principal.WindowsPrincipal($wi)
+  return $pr.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+if (-not (Test-Admin)) {
+  Write-Host "[*] Re-launching with Administrator rights..."
+  Start-Process powershell -Verb RunAs -ArgumentList "-NoLogo -NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+  exit
+}
+
+# ========== DOWNLOAD ==========
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 
-# chọn thư mục tạm
-$IsAdmin = [bool]([Security.Principal.WindowsIdentity]::GetCurrent().Groups -match 'S-1-5-32-544')
-$TempDir = if ($IsAdmin) { "$env:SystemRoot\Temp" } else { "$env:USERPROFILE\AppData\Local\Temp" }
-$TempFile = Join-Path $TempDir ("tool_{0}.cmd" -f ([guid]::NewGuid().Guid.Substring(0,8)))
+$TempFile = Join-Path $env:TEMP ("tool_{0}.cmd" -f ([guid]::NewGuid().Guid.Substring(0,8)))
+Write-Host "[*] Downloading $Url"
+$content = Invoke-RestMethod -Uri $Url -Method Get
 
-# tải nội dung .cmd
-$response = Invoke-RestMethod -Uri $Url
-if (-not $response) { throw "Failed to download content from $Url" }
-
-# kiểm hash nếu có
-if ($Sha256Expected) {
-  $bytes = [Text.Encoding]::ASCII.GetBytes($response)
-  $hash  = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash($bytes)) -replace '-'
-  if ($hash -ne $Sha256Expected) { throw "SHA-256 mismatch. Expected $Sha256Expected, got $hash" }
+if ([string]::IsNullOrWhiteSpace($content)) {
+  throw "Download failed or file empty"
 }
 
-# ghi file .cmd (ASCII để tránh BOM)
-Set-Content -Path $TempFile -Value $response -Encoding ASCII
-if (-not (Test-Path $TempFile)) { throw "Failed to create $TempFile" }
+# Normalize line endings, ghi ASCII để tránh BOM
+$content = ($content -replace "`r?`n","`r`n")
+Set-Content -Path $TempFile -Value $content -Encoding Ascii
 
-# chạy bằng cmd.exe rồi xoá dù có lỗi
-try {
-  $ComSpec = "$env:SystemRoot\System32\cmd.exe"
-  Start-Process -FilePath $ComSpec -ArgumentList ('/c "{0}"' -f $TempFile) -Wait
+if (-not (Test-Path $TempFile)) {
+  throw "Failed to save temp file $TempFile"
 }
-finally {
-  Remove-Item $TempFile -ErrorAction SilentlyContinue
-}
+
+# ========== RUN CMD ==========
+$ComSpec = "$env:SystemRoot\System32\cmd.exe"
+$cmdArgs = "/c `"$TempFile`""
+Write-Host "[*] Running: $ComSpec $cmdArgs"
+Start-Process -FilePath $ComSpec -ArgumentList $cmdArgs -Wait
+
+# ========== CLEANUP ==========
+Remove-Item $TempFile -Force -ErrorAction SilentlyContinue
+Write-Host "[+] Done. Temp file deleted."
