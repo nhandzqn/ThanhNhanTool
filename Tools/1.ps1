@@ -1,6 +1,6 @@
 # === cấu hình ===
 # Đổi URL raw GitHub của bạn vào đây:
-$Url = "https://raw.githubusercontent.com/<TAI_KHOAN>/<REPO>/<BRANCH>/tools/tool.cmd"
+$Url = "https://raw.githubusercontent.com/nhandzqn/ThanhNhanTool/refs/heads/main/Tools/1.cmd"
 # ví dụ: https://raw.githubusercontent.com/nhandzqn/ThanhNhanTool/main/tools/tool.cmd
 
 # (tuỳ chọn) đặt hash SHA-256 để kiểm toàn vẹn, để trống nếu không dùng
